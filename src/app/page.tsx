@@ -29,10 +29,10 @@ export default function Dashboard() {
 
   // Seçili tarih için koltuk atamalarını yükle
   useEffect(() => {
-    if (user && selectedDate) {
+    if (selectedDate) {
       loadSeatAssignments();
     }
-  }, [user, selectedDate]);
+  }, [selectedDate]);
 
   const loadSeatAssignments = async () => {
     setLoading(true);
