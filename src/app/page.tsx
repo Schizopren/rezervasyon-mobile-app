@@ -35,8 +35,6 @@ export default function Dashboard() {
   }, [user, selectedDate]);
 
   const loadSeatAssignments = async () => {
-    if (!user) return;
-    
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
