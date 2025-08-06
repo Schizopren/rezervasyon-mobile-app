@@ -8,9 +8,10 @@ import { tr } from 'date-fns/locale';
 interface DatePickerProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
+  isReadOnly?: boolean;
 }
 
-export default function DatePicker({ selectedDate, onDateSelect }: DatePickerProps) {
+export default function DatePicker({ selectedDate, onDateSelect, isReadOnly = false }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,16 @@ export default function DatePicker({ selectedDate, onDateSelect }: DatePickerPro
   ];
 
   const formatDate = (date: Date) => {
-    return format(date, 'EEEE, d MMMM yyyy', { locale: tr });
+    try {
+      // Geçersiz tarih kontrolü
+      if (!date || isNaN(date.getTime())) {
+        return 'Geçersiz tarih';
+      }
+      return format(date, 'EEEE, d MMMM yyyy', { locale: tr });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Geçersiz tarih';
+    }
   };
 
   const isTodayDate = isToday(selectedDate);
@@ -55,9 +65,9 @@ export default function DatePicker({ selectedDate, onDateSelect }: DatePickerPro
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200" ref={dropdownRef}>
       {/* Selected Date Display */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+      <div 
+        onClick={() => !isReadOnly && setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 ${isReadOnly ? 'cursor-default' : 'hover:bg-gray-100 transition-colors duration-200 cursor-pointer'}`}
       >
         <div className="flex items-center space-x-3">
           <Calendar className="w-5 h-5 text-gray-600" />
@@ -70,11 +80,13 @@ export default function DatePicker({ selectedDate, onDateSelect }: DatePickerPro
             )}
           </div>
         </div>
-        <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+        {!isReadOnly && (
+          <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        )}
+      </div>
 
       {/* Dropdown */}
-      {isOpen && (
+      {isOpen && !isReadOnly && (
         <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           {/* Quick Date Options */}
           <div className="p-3 border-b border-gray-100">
@@ -106,9 +118,16 @@ export default function DatePicker({ selectedDate, onDateSelect }: DatePickerPro
               type="date"
               value={format(selectedDate, 'yyyy-MM-dd')}
               onChange={(e) => {
-                const newDate = new Date(e.target.value);
-                onDateSelect(newDate);
-                setIsOpen(false);
+                try {
+                  const newDate = new Date(e.target.value);
+                  // Geçersiz tarih kontrolü
+                  if (!isNaN(newDate.getTime())) {
+                    onDateSelect(newDate);
+                    setIsOpen(false);
+                  }
+                } catch (error) {
+                  console.error('Date parsing error:', error);
+                }
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />

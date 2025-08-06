@@ -18,6 +18,10 @@ interface HeaderProps {
   onUserProfile?: () => void;
   onLogin?: (email: string, password: string) => Promise<boolean>;
   currentUser?: User | null;
+  searchResults?: any[];
+  isSearching?: boolean;
+  onNavigate?: (path: string) => void;
+  currentPath?: string;
 }
 
 export default function Header({ 
@@ -25,7 +29,11 @@ export default function Header({
   onSearch, 
   onUserProfile, 
   onLogin,
-  currentUser 
+  currentUser,
+  searchResults = [],
+  isSearching = false,
+  onNavigate,
+  currentPath = '/'
 }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,6 +146,7 @@ export default function Header({
             <h1 className="text-xl font-semibold text-gray-900">
               KAS
             </h1>
+            
             <div className="flex items-center space-x-4">
               {/* Search Container */}
               <div className="relative">
@@ -164,7 +173,12 @@ export default function Header({
                       type="text"
                       placeholder="Ara..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        if (onSearch) {
+                          onSearch(e.target.value);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
                     />
                     <button
@@ -175,6 +189,41 @@ export default function Header({
                       <X className="w-4 h-4" />
                     </button>
                   </form>
+                  
+                  {/* Search Results Dropdown */}
+                  {isSearchOpen && (searchQuery.trim() || isSearching) && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      {isSearching ? (
+                        <div className="p-4 text-center text-gray-500">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                          Aranıyor...
+                        </div>
+                      ) : searchResults.length > 0 ? (
+                        <div className="py-2">
+                          {searchResults.map((result, index) => (
+                            <div
+                              key={index}
+                              className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">
+                                {result.customer.name}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {result.customer.title || 'Başlık yok'}
+                              </div>
+                              <div className="text-sm text-blue-600 font-medium">
+                                {result.seat} koltuğunda
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : searchQuery.trim() ? (
+                        <div className="p-4 text-center text-gray-500">
+                          Sonuç bulunamadı
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               </div>
 

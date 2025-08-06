@@ -81,8 +81,10 @@ CREATE POLICY "Authenticated users can manage customers" ON customers
 
 -- Seats için RLS
 ALTER TABLE seats ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated users can view seats" ON seats
-  FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Anyone can view seats" ON seats
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can manage seats" ON seats
+  FOR ALL USING (auth.role() = 'authenticated');
 
 -- Trigger function for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

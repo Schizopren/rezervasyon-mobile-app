@@ -29,6 +29,8 @@ export interface Customer {
   phone?: string;
   email?: string;
   reference?: string;
+  is_deleted?: boolean;
+  deleted_at?: string;
   created_at: string;
 }
 
@@ -108,20 +110,22 @@ export const seats = {
 
 // Customer işlemleri
 export const customers = {
-  // Tüm müşterileri getir
+  // Tüm müşterileri getir (silinmemiş olanlar)
   getAll: async () => {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
+      .is('is_deleted', false)
       .order('name', { ascending: true });
     return { data, error };
   },
 
-  // Müşteri ara
+  // Müşteri ara (silinmemiş olanlar)
   search: async (searchTerm: string) => {
     const { data, error } = await supabase
       .from('customers')
       .select('*')
+      .is('is_deleted', false)
       .or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
       .order('name', { ascending: true });
     return { data, error };
@@ -148,11 +152,14 @@ export const customers = {
     return { data, error };
   },
 
-  // Müşteri sil
+  // Müşteri sil (soft delete)
   delete: async (id: string) => {
     const { error } = await supabase
       .from('customers')
-      .delete()
+      .update({ 
+        is_deleted: true, 
+        deleted_at: new Date().toISOString() 
+      })
       .eq('id', id);
     return { error };
   }
@@ -160,7 +167,7 @@ export const customers = {
 
 // Seat assignment işlemleri
 export const seatAssignments = {
-  // Belirli tarih için tüm atamaları getir
+  // Belirli tarih için tüm atamaları getir (silinmiş müşteriler dahil)
   getByDate: async (date: string) => {
     const { data, error } = await supabase
       .from('seat_assignments')
@@ -173,7 +180,7 @@ export const seatAssignments = {
     return { data, error };
   },
 
-  // Belirli koltuk için atama getir
+  // Belirli koltuk için atama getir (silinmiş müşteriler dahil)
   getBySeatAndDate: async (seatId: string, date: string) => {
     const { data, error } = await supabase
       .from('seat_assignments')
@@ -184,7 +191,7 @@ export const seatAssignments = {
       `)
       .eq('seat_id', seatId)
       .eq('date', date)
-      .single();
+      .maybeSingle();
     return { data, error };
   },
 

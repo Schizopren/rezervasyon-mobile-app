@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -23,18 +23,7 @@ export default function Dashboard() {
   const [selectedSeat, setSelectedSeat] = useState<string | undefined>();
   const [seatAssignmentsData, setSeatAssignmentsData] = useState<any[]>([]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Seçili tarih için koltuk atamalarını yükle
-  useEffect(() => {
-    if (selectedDate) {
-      loadSeatAssignments();
-    }
-  }, [selectedDate]);
-
-  const loadSeatAssignments = async () => {
+  const loadSeatAssignments = useCallback(async () => {
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -42,6 +31,7 @@ export default function Dashboard() {
       if (error) {
         console.error('Error loading seat assignments:', error);
       } else {
+        // Tüm atamaları göster (silinmiş müşteriler dahil)
         setSeatAssignmentsData(data || []);
       }
     } catch (error) {
@@ -49,7 +39,26 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Cleanup function
+    return () => {
+      setSeatAssignmentsData([]);
+      setSearchResults([]);
+      setIsSearching(false);
+      setLoading(false);
+    };
+  }, []);
+
+  // Seçili tarih için koltuk atamalarını yükle
+  useEffect(() => {
+    if (selectedDate && mounted) {
+      loadSeatAssignments();
+    }
+  }, [selectedDate, mounted, loadSeatAssignments]);
 
   const handleLogin = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -73,10 +82,49 @@ export default function Dashboard() {
     }
   };
 
-  const handleSearch = (query: string) => {
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (query: string) => {
     console.log('Search query:', query);
-    // Implement search functionality with query
-    alert(`Arama: ${query}`);
+    
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Seçili tarih için tüm atamaları getir
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const { data: assignments, error } = await seatAssignments.getByDate(dateStr);
+      
+      if (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+        return;
+      }
+
+      // Müşteri adına göre filtrele (silinmiş müşteriler dahil)
+      const matchingAssignments = assignments?.filter((assignment: any) => 
+        assignment.customer?.name?.toLowerCase().includes(query.toLowerCase()) ||
+        assignment.customer?.title?.toLowerCase().includes(query.toLowerCase())
+      ) || [];
+
+      // Sonuçları formatla
+      const results = matchingAssignments.map((assignment: any) => ({
+        customer: assignment.customer,
+        seat: `${assignment.seat?.row}${assignment.seat?.number}`,
+        date: assignment.date
+      }));
+
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleUserProfile = () => {
@@ -91,6 +139,23 @@ export default function Dashboard() {
 
   const handleSeatClick = (seatId: string) => {
     console.log('Seat clicked:', seatId);
+    
+    // Sadece giriş yapmış kullanıcılar drawer'ı açabilir
+    if (!user) {
+      return;
+    }
+    
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk düzenleme yapılamaz!');
+      return;
+    }
+    
     setSelectedSeat(seatId);
     setIsDrawerOpen(true);
   };
@@ -110,15 +175,37 @@ export default function Dashboard() {
   };
 
   const handleKoltukAtaClick = () => {
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk atama yapılamaz!');
+      return;
+    }
+    
     setSelectedSeat(undefined);
     setIsDrawerOpen(true);
   };
 
-  const handleAssign = async (data: { customer: any; seat: string; date: string }) => {
+  const handleAssign = async (data: { customer: any; seat: string; date?: string }) => {
     console.log('Assignment data:', data);
     
     if (!user) {
       alert('Kullanıcı girişi gerekli!');
+      return;
+    }
+
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk atama yapılamaz!');
       return;
     }
 
@@ -140,8 +227,8 @@ export default function Dashboard() {
       // Müşteriyi ekleyelim (eğer yeni ise)
       let customerId = data.customer.id;
       
-      // Eğer müşteri yeni ise (id'si timestamp ise)
-      if (data.customer.id && data.customer.id.length > 10) {
+      // Eğer müşteri yeni ise (geçici ID ile işaretlenmiş)
+      if (data.customer.id && data.customer.id.startsWith('temp_')) {
         const { data: newCustomer, error: customerError } = await customers.create({
           name: data.customer.name,
           title: data.customer.title,
@@ -159,11 +246,34 @@ export default function Dashboard() {
         customerId = newCustomer.id;
       }
 
-      // Koltuk atamasını oluşturalım
+      // Önce mevcut atamayı kontrol et ve sil
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const { data: existingAssignment, error: checkError } = await seatAssignments.getBySeatAndDate(
+        seatData.id,
+        dateStr
+      );
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing assignment:', checkError);
+        alert('Mevcut atama kontrol edilirken hata oluştu!');
+        return;
+      }
+
+      if (existingAssignment) {
+        // Mevcut atamayı sil
+        const { error: deleteError } = await seatAssignments.delete(existingAssignment.id);
+        if (deleteError) {
+          console.error('Existing assignment delete error:', deleteError);
+          alert('Mevcut koltuk ataması silinirken hata oluştu!');
+          return;
+        }
+      }
+
+      // Yeni koltuk atamasını oluşturalım
       const { data: assignment, error: assignmentError } = await seatAssignments.create({
         seat_id: seatData.id,
         customer_id: customerId,
-        date: data.date,
+        date: dateStr,
         assigned_by: user.id
       });
 
@@ -192,6 +302,17 @@ export default function Dashboard() {
     
     if (!user) {
       alert('Kullanıcı girişi gerekli!');
+      return;
+    }
+
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk boşaltma yapılamaz!');
       return;
     }
 
@@ -262,13 +383,18 @@ export default function Dashboard() {
         
         // Gerçek verilerden bu koltuğun atanıp atanmadığını kontrol et
         const assignment = seatAssignmentsData.find(
-          (assignment: any) => 
-            assignment.seat?.row === row && 
-            assignment.seat?.number === i
+          (assignment: any) => assignment.seat?.row === row && assignment.seat?.number === i
         );
         
         const isAssigned = !!assignment;
         const customer = assignment?.customer;
+        
+        // Geçmiş tarihlerde koltukların tıklanabilir olup olmadığını kontrol et
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selectedDateOnly = new Date(selectedDate);
+        selectedDateOnly.setHours(0, 0, 0, 0);
+        const isPastDate = selectedDateOnly < today;
         
         rowSeats.push(
           <button
@@ -276,23 +402,35 @@ export default function Dashboard() {
             className={`
               w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 
               rounded-lg border-2 font-bold text-xs md:text-sm lg:text-base
-              transition-all duration-200 hover:scale-105
+              transition-all duration-200
+              ${isPastDate 
+                ? 'opacity-60 cursor-not-allowed' 
+                : 'hover:scale-105'
+              }
               ${isAssigned 
                 ? 'bg-red-500 text-white border-red-600 shadow-lg' 
                 : 'bg-green-500 text-white border-green-600 hover:bg-green-600'
               }
               relative
             `}
-            onClick={() => handleSeatClick(seatId)}
+            onClick={() => !isPastDate && handleSeatClick(seatId)}
+            disabled={isPastDate}
           >
             <span className="font-bold">{seatId}</span>
             
             {/* Müşteri bilgileri - sadece dolu koltuklarda, direkt görünür */}
             {isAssigned && customer && (
-              <div className="absolute inset-0 bg-black bg-opacity-75 text-white rounded-lg 
-                            flex flex-col items-center justify-center text-xs md:text-sm">
+              <div className={`absolute inset-0 text-white rounded-lg 
+                            flex flex-col items-center justify-center text-xs md:text-sm
+                            ${customer.is_deleted 
+                              ? 'bg-gray-600 bg-opacity-75' 
+                              : 'bg-black bg-opacity-75'
+                            }`}>
                 <div className="font-semibold">{customer.title}</div>
                 <div className="text-center leading-tight">{customer.name}</div>
+                {customer.is_deleted && (
+                  <div className="text-xs text-gray-300 mt-1">(Silinmiş)</div>
+                )}
               </div>
             )}
           </button>
@@ -332,10 +470,45 @@ export default function Dashboard() {
         onUserProfile={handleUserProfile}
         onLogin={handleLogin}
         currentUser={user}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        onNavigate={(path) => {
+          if (path === '/') {
+            // Ana sayfada kal
+          } else if (path === '/customers') {
+            // Kişiler sayfasına git (henüz oluşturmadık)
+            alert('Kişiler sayfası yakında eklenecek!');
+          }
+        }}
+        currentPath="/"
       />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Navigation - Only show for logged in users */}
+        {user && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex space-x-1 border-b border-gray-200">
+              <button
+                onClick={() => {
+                  // Ana sayfa aktif
+                }}
+                className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 rounded-t-lg"
+              >
+                Koltuk Düzeni
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = '/customers';
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors duration-200"
+              >
+                Kişiler
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Date Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">
@@ -346,7 +519,13 @@ export default function Dashboard() {
           <div className="mb-4">
             <DatePicker 
               selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
+              onDateSelect={(date) => {
+                // Geçersiz tarih kontrolü
+                if (date && !isNaN(date.getTime())) {
+                  setSelectedDate(date);
+                }
+              }}
+              isReadOnly={!user}
             />
           </div>
         </div>
@@ -355,13 +534,34 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold">Koltuk Düzeni</h2>
-            <button 
-              onClick={handleKoltukAtaClick}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Koltuk Ata</span>
-            </button>
+            {user && (
+              (() => {
+                // Geçmiş tarihlerde butonu gizle
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const selectedDateOnly = new Date(selectedDate);
+                selectedDateOnly.setHours(0, 0, 0, 0);
+                const isPastDate = selectedDateOnly < today;
+                
+                if (isPastDate) {
+                  return (
+                    <div className="text-gray-500 text-sm bg-gray-100 px-4 py-2 rounded-lg">
+                      Geçmiş tarihlerde koltuk düzenleme yapılamaz
+                    </div>
+                  );
+                }
+                
+                return (
+                  <button 
+                    onClick={handleKoltukAtaClick}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Koltuk Ata</span>
+                  </button>
+                );
+              })()
+            )}
           </div>
           
           {loading ? (
@@ -390,6 +590,7 @@ export default function Dashboard() {
           onSeatSelect={(seat) => setSelectedSeat(seat || undefined)}
           existingCustomer={selectedSeat ? getCustomerForSeat(selectedSeat) : undefined}
           onEmptySeat={handleEmptySeat}
+          seatAssignmentsData={seatAssignmentsData}
         />
       </Drawer>
     </div>

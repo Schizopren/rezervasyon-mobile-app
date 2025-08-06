@@ -21,6 +21,7 @@ interface SeatAssignmentFormProps {
   onSeatSelect?: (seat: string) => void;
   existingCustomer?: Customer;
   onEmptySeat?: (seat: string) => void;
+  seatAssignmentsData?: any[];
 }
 
 export default function SeatAssignmentForm({ 
@@ -30,7 +31,8 @@ export default function SeatAssignmentForm({
   onAssign,
   onSeatSelect,
   existingCustomer,
-  onEmptySeat
+  onEmptySeat,
+  seatAssignmentsData
 }: SeatAssignmentFormProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
@@ -87,29 +89,19 @@ export default function SeatAssignmentForm({
     setLoading(true);
     
     try {
-      const { data: newCustomerData, error } = await customers.create({
+      // Yeni müşteri için geçici ID oluştur
+      const tempCustomer = {
+        id: `temp_${Date.now()}`,
         name: newCustomer.name,
         title: newCustomer.title || undefined,
         phone: newCustomer.phone || undefined,
         email: newCustomer.email || undefined,
         reference: newCustomer.reference || undefined
-      });
+      };
 
-      if (error) {
-        console.error('Error creating customer:', error);
-        alert('Müşteri eklenirken hata oluştu!');
-        return;
-      }
-
-      setSelectedCustomer(newCustomerData);
+      setSelectedCustomer(tempCustomer);
       setShowNewCustomerForm(false);
       setNewCustomer({ title: '', name: '', phone: '', email: '', reference: '' });
-      
-      // Müşteri listesini yenile
-      const { data: updatedCustomers, error: loadError } = await customers.getAll();
-      if (!loadError && updatedCustomers) {
-        setAllCustomers(updatedCustomers);
-      }
       
     } catch (error) {
       console.error('Error creating customer:', error);
@@ -126,17 +118,39 @@ export default function SeatAssignmentForm({
   };
 
   const handleAssign = () => {
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk atama yapılamaz!');
+      return;
+    }
+    
     if (selectedCustomer && selectedSeat) {
       onAssign({
         customer: selectedCustomer,
         seat: selectedSeat,
-        date: selectedDate.toISOString().split('T')[0]
+        date: '' // Tarih artık page.tsx'de selectedDate'den alınıyor
       });
       onClose();
     }
   };
 
   const handleEmptySeat = () => {
+    // Geçmiş tarihlerde koltuk işlemlerini engelle
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+    
+    if (selectedDateOnly < today) {
+      alert('Geçmiş tarihlerde koltuk boşaltma yapılamaz!');
+      return;
+    }
+    
     if (selectedSeat && onEmptySeat) {
       onEmptySeat(selectedSeat);
       onClose();
@@ -154,8 +168,14 @@ export default function SeatAssignmentForm({
               const maxSeats = row === 'P' ? 9 : 19;
               return Array.from({ length: maxSeats }, (_, i) => {
                 const seatId = `${row}${i + 1}`;
-                // Dolu koltukları kontrol et (gerçek uygulamada API'den gelecek)
-                const isOccupied = (row === 'A' && i < 5) || (row === 'B' && i < 3) || (row === 'C' && i < 7);
+                
+                // Gerçek verilerden bu koltuğun atanıp atanmadığını kontrol et
+                const assignment = seatAssignmentsData?.find(
+                  (assignment: any) => assignment.seat?.row === row && assignment.seat?.number === i + 1
+                );
+                
+                const isOccupied = !!assignment;
+                const customer = assignment?.customer;
                 
                 return (
                   <button
@@ -163,7 +183,9 @@ export default function SeatAssignmentForm({
                     onClick={() => handleSeatSelect(seatId)}
                     className={`p-1 sm:p-2 text-xs sm:text-sm font-medium rounded border-2 transition-colors duration-200 ${
                       isOccupied
-                        ? 'bg-red-500 text-white border-red-600 hover:bg-red-600'
+                        ? customer?.is_deleted
+                          ? 'bg-gray-500 text-white border-gray-600 hover:bg-gray-600'
+                          : 'bg-red-500 text-white border-red-600 hover:bg-red-600'
                         : 'bg-green-500 text-white border-green-600 hover:bg-green-600'
                     }`}
                   >
@@ -192,12 +214,28 @@ export default function SeatAssignmentForm({
                   Değiştir
                 </button>
                 {existingCustomer && onEmptySeat && (
-                  <button
-                    onClick={handleEmptySeat}
-                    className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium"
-                  >
-                    Koltuğu Boşalt
-                  </button>
+                  (() => {
+                    // Geçmiş tarihlerde butonu devre dışı bırak
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const selectedDateOnly = new Date(selectedDate);
+                    selectedDateOnly.setHours(0, 0, 0, 0);
+                    const isPastDate = selectedDateOnly < today;
+                    
+                    return (
+                      <button
+                        onClick={handleEmptySeat}
+                        disabled={isPastDate}
+                        className={`text-xs sm:text-sm font-medium ${
+                          isPastDate 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-red-600 hover:text-red-800'
+                        }`}
+                      >
+                        {isPastDate ? 'Geçmiş Tarih' : 'Koltuğu Boşalt'}
+                      </button>
+                    );
+                  })()
                 )}
              </div>
            </div>
@@ -394,14 +432,29 @@ export default function SeatAssignmentForm({
         >
           İptal
         </button>
-        <button
-          onClick={handleAssign}
-          disabled={!selectedCustomer || !selectedSeat}
-          className="flex-1 bg-blue-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-1 sm:space-x-2"
-        >
-          <Save className="w-4 h-4" />
-          <span>Koltuk Ata</span>
-        </button>
+                 {(() => {
+           // Geçmiş tarihlerde butonu devre dışı bırak
+           const today = new Date();
+           today.setHours(0, 0, 0, 0);
+           const selectedDateOnly = new Date(selectedDate);
+           selectedDateOnly.setHours(0, 0, 0, 0);
+           const isPastDate = selectedDateOnly < today;
+           
+           return (
+             <button
+               onClick={handleAssign}
+               disabled={!selectedCustomer || !selectedSeat || isPastDate}
+               className={`flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
+                 isPastDate 
+                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                   : 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
+               }`}
+             >
+               <Save className="w-4 h-4" />
+               <span>{isPastDate ? 'Geçmiş Tarih' : 'Koltuk Ata'}</span>
+             </button>
+           );
+         })()}
       </div>
     </div>
   );
