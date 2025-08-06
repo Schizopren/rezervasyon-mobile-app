@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Koltuk Atama Sistemi - Web Uygulaması
 
-## Getting Started
+Bu proje, etkinlik alanlarındaki koltuk atama ve takip sistemi için geliştirilmiş Next.js web uygulamasıdır.
 
-First, run the development server:
+## 🚀 Özellikler
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Koltuk Yönetimi**: A, B, C, D, E ve P sıralarındaki koltukları görüntüleme ve atama
+- **Takvim Entegrasyonu**: Tarih bazlı koltuk atama ve görüntüleme
+- **Müşteri Yönetimi**: Müşteri bilgilerini kaydetme ve arama
+- **Gerçek Zamanlı Güncelleme**: Supabase ile gerçek zamanlı veri senkronizasyonu
+- **Responsive Tasarım**: Mobil ve masaüstü uyumlu arayüz
+
+## 🛠️ Teknolojiler
+
+- **Next.js 14**: React framework
+- **TypeScript**: Tip güvenliği
+- **Tailwind CSS**: Styling
+- **Supabase**: Backend ve veritabanı
+- **React Query**: Veri yönetimi
+- **Lucide React**: İkonlar
+- **Date-fns**: Tarih işlemleri
+
+## 📦 Kurulum
+
+1. **Bağımlılıkları yükleyin:**
+   ```bash
+   npm install
+   ```
+
+2. **Environment variables ayarlayın:**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   `.env.local` dosyasını düzenleyin:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. **Geliştirme sunucusunu başlatın:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Tarayıcıda açın:**
+   ```
+   http://localhost:3000
+   ```
+
+## 🗄️ Veritabanı Yapısı
+
+### Tablolar:
+- **users**: Kullanıcı bilgileri
+- **seats**: Koltuk bilgileri
+- **customers**: Müşteri bilgileri
+- **seat_assignments**: Koltuk atamaları
+
+## 🔧 Geliştirme
+
+### Komutlar:
+- `npm run dev`: Geliştirme sunucusu
+- `npm run build`: Production build
+- `npm run start`: Production sunucusu
+- `npm run lint`: Kod kontrolü
+
+### Klasör Yapısı:
+```
+src/
+├── app/           # Next.js app router
+├── components/    # React componentleri
+└── lib/          # Utility fonksiyonları
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Kullanım
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Ana Sayfa**: Koltuk düzeni ve takvim görüntüleme
+2. **Koltuk Atama**: Müşteri seçimi ve koltuk atama
+3. **Arama**: Müşteri ve koltuk arama
+4. **Takvim**: Tarih bazlı görüntüleme
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔒 Güvenlik
 
-## Learn More
+- Supabase RLS (Row Level Security) aktif
+- JWT token tabanlı kimlik doğrulama
+- CORS politikaları yapılandırılmış
 
-To learn more about Next.js, take a look at the following resources:
+## 📱 Responsive Tasarım
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Mobil uyumlu arayüz
+- Tablet ve masaüstü optimizasyonu
+- Touch-friendly koltuk seçimi
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Deployment
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel ile kolay deployment:
+```bash
+npm run build
+vercel --prod
+```
