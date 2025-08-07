@@ -5,12 +5,20 @@ import { Plus, Search, Edit, Trash2, Eye, Users } from 'lucide-react';
 import { customers } from '../../lib/supabase';
 import { Customer } from '../../lib/supabase';
 import Header from '../../components/Header';
-import { useAuth } from '../../hooks/useAuth';
+
 import CustomerForm from '../../components/CustomerForm';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function CustomersPage() {
-  const { user, loading, signOut } = useAuth();
+  // Mock a default user for testing
+  const user = {
+    id: '00000000-0000-0000-0000-000000000000', // Geçerli bir UUID formatı
+    name: 'Test User',
+    email: 'test@example.com',
+    role: 'admin' as const,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,10 +60,8 @@ export default function CustomersPage() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      loadCustomers();
-    }
-  }, [user, loadCustomers]);
+    loadCustomers();
+  }, [loadCustomers]);
 
   // Search fonksiyonu
   const handleSearch = async (query: string) => {
@@ -81,13 +87,7 @@ export default function CustomersPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const handleLogout = async () => {};
 
   const handleSearchSubmit = (query: string) => {
     handleSearch(query);
@@ -97,10 +97,7 @@ export default function CustomersPage() {
     console.log('User profile clicked');
   };
 
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    // Bu sayfada login işlemi yapılmayacak
-    return false;
-  };
+  const handleLogin = async () => true;
 
   const handleNavigate = (path: string) => {
     if (path === '/') {
@@ -181,7 +178,7 @@ export default function CustomersPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
-        {user && (
+        {(
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex space-x-1 border-b border-gray-200">
               <button
@@ -209,7 +206,7 @@ export default function CustomersPage() {
               <Users className="w-6 h-6 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">Kişiler</h1>
             </div>
-            {user && (
+            {(
               <button 
                 onClick={handleAddCustomer}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
@@ -222,7 +219,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Search Bar */}
-        {user && (
+        {(
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

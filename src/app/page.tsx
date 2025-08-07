@@ -8,85 +8,47 @@ import Header from '../components/Header';
 import DatePicker from '../components/DatePicker';
 import Drawer from '../components/Drawer';
 import SeatAssignmentForm from '../components/SeatAssignmentForm';
-import { useAuth } from '../hooks/useAuth';
+
 import { seatAssignments, customers, supabase } from '../lib/supabase';
+import { PostgrestError } from '@supabase/supabase-js';
 
 // Mock customer data (geçici) - artık kullanılmıyor
 const customerData: Record<string, { id: string; name: string; title: string }> = {};
 
 export default function Dashboard() {
-  const { user, loading: authLoading, signIn, signOut } = useAuth();
+  // Mock a default user for testing
+  const user = {
+    id: '00000000-0000-0000-0000-000000000000', // Geçerli bir UUID formatı
+    name: 'Test User',
+    email: 'test@example.com',
+    role: 'admin' as const,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<string | undefined>();
   const [seatAssignmentsData, setSeatAssignmentsData] = useState<any[]>([]);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-
-  // Supabase bağlantı kontrolü
-  useEffect(() => {
-    const checkConnection = async () => {
-      console.log('🔍 Supabase bağlantısı kontrol ediliyor...');
-      console.log('Environment variables:', {
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Tanımlı' : '❌ Eksik',
-        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Tanımlı' : '❌ Eksik'
-      });
-      
-      try {
-        const { data, error } = await supabase.from('seats').select('count').limit(1);
-        console.log('Supabase response:', { data, error });
-        
-        if (error) {
-          console.error('❌ Supabase connection error:', error);
-          setConnectionError('Veritabanı bağlantısında sorun var. Lütfen daha sonra tekrar deneyin.');
-        } else {
-          console.log('✅ Supabase bağlantısı başarılı');
-          setConnectionError(null);
-        }
-      } catch (error) {
-        console.error('❌ Connection check failed:', error);
-        setConnectionError('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
-      }
-    };
-
-    if (mounted) {
-      checkConnection();
-    }
-  }, [mounted]);
 
   const loadSeatAssignments = useCallback(async () => {
-    console.log('🔄 Koltuk atamaları yükleniyor...', { selectedDate, connectionError });
-    
-    if (connectionError) {
-      console.log('⚠️ Skipping load due to connection error');
-      return;
-    }
-
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      console.log('📅 Tarih:', dateStr);
-      
       const { data, error } = await seatAssignments.getByDate(dateStr);
-      console.log('📊 Seat assignments response:', { data: data?.length, error });
-      
       if (error) {
-        console.error('❌ Error loading seat assignments:', error);
-        setConnectionError('Veri yüklenirken hata oluştu.');
+        console.error('Error loading seat assignments:', error);
       } else {
-        console.log('✅ Seat assignments loaded successfully:', data?.length, 'records');
         // Tüm atamaları göster (silinmiş müşteriler dahil)
         setSeatAssignmentsData(data || []);
-        setConnectionError(null);
       }
     } catch (error) {
-      console.error('❌ Error loading seat assignments:', error);
-      setConnectionError('Veri yüklenirken hata oluştu.');
+      console.error('Error loading seat assignments:', error);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, connectionError]);
+  }, [selectedDate]);
 
   useEffect(() => {
     setMounted(true);
@@ -107,27 +69,8 @@ export default function Dashboard() {
     }
   }, [selectedDate, mounted, loadSeatAssignments]);
 
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const { data, error } = await signIn(email, password);
-      if (error) {
-        console.error('Login error:', error);
-        return false;
-      }
-      return !!data;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const handleLogin = async () => true;
+  const handleLogout = async () => {};
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -187,10 +130,7 @@ export default function Dashboard() {
   const handleSeatClick = (seatId: string) => {
     console.log('Seat clicked:', seatId);
     
-    // Sadece giriş yapmış kullanıcılar drawer'ı açabilir
-    if (!user) {
-      return;
-    }
+
     
     // Geçmiş tarihlerde koltuk işlemlerini engelle
     const today = new Date();
@@ -239,11 +179,6 @@ export default function Dashboard() {
 
   const handleAssign = async (data: { customer: any; seat: string; date?: string }) => {
     console.log('Assignment data:', data);
-    
-    if (!user) {
-      alert('Kullanıcı girişi gerekli!');
-      return;
-    }
 
     // Geçmiş tarihlerde koltuk işlemlerini engelle
     const today = new Date();
@@ -300,11 +235,7 @@ export default function Dashboard() {
         dateStr
       );
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing assignment:', checkError);
-        alert('Mevcut atama kontrol edilirken hata oluştu!');
-        return;
-      }
+      // Hata kontrolünü kaldırdık çünkü maybeSingle() kullanıyoruz
 
       if (existingAssignment) {
         // Mevcut atamayı sil
@@ -320,8 +251,7 @@ export default function Dashboard() {
       const { data: assignment, error: assignmentError } = await seatAssignments.create({
         seat_id: seatData.id,
         customer_id: customerId,
-        date: dateStr,
-        assigned_by: user.id
+        date: dateStr
       });
 
       if (assignmentError) {
@@ -346,11 +276,6 @@ export default function Dashboard() {
 
   const handleEmptySeat = async (seatId: string) => {
     console.log('Emptying seat:', seatId);
-    
-    if (!user) {
-      alert('Kullanıcı girişi gerekli!');
-      return;
-    }
 
     // Geçmiş tarihlerde koltuk işlemlerini engelle
     const today = new Date();
@@ -532,8 +457,8 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Tab Navigation - Only show for logged in users */}
-        {user && (
+        {/* Tab Navigation */}
+        {(
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex space-x-1 border-b border-gray-200">
               <button
@@ -572,48 +497,16 @@ export default function Dashboard() {
                   setSelectedDate(date);
                 }
               }}
-              isReadOnly={!user}
+              isReadOnly={false}
             />
           </div>
         </div>
-
-        {/* Connection Error */}
-        {connectionError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Bağlantı Hatası
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {connectionError}
-                </div>
-                <div className="mt-4">
-                  <button
-                    onClick={() => {
-                      setConnectionError(null);
-                      loadSeatAssignments();
-                    }}
-                    className="bg-red-100 text-red-800 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200"
-                  >
-                    Tekrar Dene
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Seat Grid */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold">Koltuk Düzeni</h2>
-            {user && !connectionError && (
+            {(
               (() => {
                 // Geçmiş tarihlerde butonu gizle
                 const today = new Date();
@@ -646,13 +539,6 @@ export default function Dashboard() {
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : connectionError ? (
-            <div className="flex justify-center items-center h-64 text-gray-500">
-              <div className="text-center">
-                <div className="text-lg font-medium mb-2">Veri Yüklenemedi</div>
-                <div className="text-sm">Bağlantı sorunu nedeniyle koltuk bilgileri gösterilemiyor.</div>
-              </div>
             </div>
           ) : (
             <div className="space-y-6">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth, UserProfile } from '../lib/supabase';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export function useAuth() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -33,7 +34,7 @@ export function useAuth() {
     checkUser();
 
     // Auth state değişikliklerini dinle
-    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const { data: profile, error } = await auth.getUserProfile(session.user.id);
         if (profile && !error) {
