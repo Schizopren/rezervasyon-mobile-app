@@ -116,7 +116,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
               placeholder="Dr., Prof., Av., Doç., Yrd. Doç. vb."
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 bg-white"
             />
           </div>
 
@@ -130,7 +130,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
               required
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 bg-white"
               placeholder="Ad Soyad"
             />
           </div>
@@ -144,7 +144,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 bg-white"
               placeholder="0555 123 45 67"
             />
           </div>
@@ -158,7 +158,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 bg-white"
               placeholder="ornek@email.com"
             />
           </div>
@@ -173,7 +173,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
               placeholder="Kim tarafından geldiği, özel not vb."
               value={formData.reference}
               onChange={(e) => handleInputChange('reference', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 bg-white"
             />
           </div>
 
@@ -189,7 +189,7 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
             <button
               type="button"
               onClick={onClose}
-              className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-gray-700 bg-white"
             >
               İptal
             </button>
