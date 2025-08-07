@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, LogOut, User, X, ChevronDown, Settings } from 'lucide-react';
+import { Search, LogOut, User, X, ChevronDown, Settings, Sun, Moon } from 'lucide-react';
+import { useThemeContext } from '../contexts/ThemeContext';
 
 interface User {
   id: string;
@@ -35,6 +36,7 @@ export default function Header({
   onNavigate,
   currentPath = '/'
 }: HeaderProps) {
+  const { theme, toggleTheme } = useThemeContext();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -111,14 +113,27 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
               KAS
             </h1>
             
             <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-200"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </button>
+
               {/* Search Container */}
               <div className="relative">
                 {/* Search Button */}
@@ -150,7 +165,7 @@ export default function Header({
                           onSearch(e.target.value);
                         }
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white text-gray-900 placeholder-gray-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <button
                       type="button"
@@ -163,7 +178,7 @@ export default function Header({
                   
                   {/* Search Results Dropdown */}
                   {isSearchOpen && (searchQuery.trim() || isSearching) && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
                       {isSearching ? (
                         <div className="p-4 text-center text-gray-500">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto mb-2"></div>
@@ -174,12 +189,12 @@ export default function Header({
                           {searchResults.map((result, index) => (
                             <div
                               key={index}
-                              className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                              className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                             >
-                              <div className="font-medium text-gray-900">
+                              <div className="font-medium text-gray-900 dark:text-white">
                                 {result.customer.name}
                               </div>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
                                 {result.customer.title || 'Başlık yok'}
                               </div>
                               <div className="text-sm text-blue-600 font-medium">
@@ -219,22 +234,22 @@ export default function Header({
 
                 {/* User Dropdown Menu */}
                 {currentUser && isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <div className="text-sm font-medium text-gray-900">{currentUser.name}</div>
-                      <div className="text-xs text-gray-500">{currentUser.email}</div>
-                      <div className="text-xs text-blue-600 font-medium capitalize">{currentUser.role}</div>
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                    <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{currentUser.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-medium capitalize">{currentUser.role}</div>
                     </div>
                     <button
                       onClick={onUserProfile}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                     >
                       <Settings className="w-4 h-4" />
                       <span>Profil</span>
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Çıkış Yap</span>

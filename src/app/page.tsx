@@ -411,7 +411,7 @@ export default function Dashboard() {
       
       seats.push(
         <div key={row} className="mb-6 md:mb-8">
-          <h3 className="text-lg md:text-xl font-bold mb-4 text-center text-gray-800">
+          <h3 className="text-lg md:text-xl font-bold mb-4 text-center text-gray-800 dark:text-gray-200">
             {row} Sırası
           </h3>
           <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
@@ -434,7 +434,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <Header 
         onLogout={handleLogout}
@@ -459,13 +459,13 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
         {(
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex space-x-1 border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex space-x-1 border-b border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => {
                   // Ana sayfa aktif
                 }}
-                className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50 rounded-t-lg"
+                className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
               >
                 Koltuk Düzeni
               </button>
@@ -473,7 +473,7 @@ export default function Dashboard() {
                 onClick={() => {
                   window.location.href = '/customers';
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors duration-200"
+                className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors duration-200"
               >
                 Kişiler
               </button>
@@ -482,8 +482,8 @@ export default function Dashboard() {
         )}
 
         {/* Date Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-gray-900/20 p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
             Tarih Seçimi
           </h2>
           
@@ -503,9 +503,9 @@ export default function Dashboard() {
         </div>
 
         {/* Seat Grid */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-gray-900/20 p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Koltuk Düzeni</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Koltuk Düzeni</h2>
             {(
               (() => {
                 // Geçmiş tarihlerde butonu gizle
@@ -517,7 +517,7 @@ export default function Dashboard() {
                 
                 if (isPastDate) {
                   return (
-                    <div className="text-gray-500 text-sm bg-gray-100 px-4 py-2 rounded-lg">
+                    <div className="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
                       Geçmiş tarihlerde koltuk düzenleme yapılamaz
                     </div>
                   );
@@ -526,7 +526,7 @@ export default function Dashboard() {
                 return (
                   <button 
                     onClick={handleKoltukAtaClick}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                    className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center space-x-2"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Koltuk Ata</span>

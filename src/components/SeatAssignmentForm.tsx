@@ -162,7 +162,7 @@ export default function SeatAssignmentForm({
       {/* Seat Selection */}
       {!selectedSeat && (
         <div className="space-y-4">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Koltuk Seçimi</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Koltuk Seçimi</h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2 max-h-60 overflow-y-auto">
             {['A', 'B', 'C', 'D', 'E', 'P'].map(row => {
               const maxSeats = row === 'P' ? 9 : 19;
@@ -200,16 +200,16 @@ export default function SeatAssignmentForm({
 
              {/* Seat Info */}
        {selectedSeat && (
-                 <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                 <div className="bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm sm:text-base font-semibold text-blue-900 mb-2">Seçilen Koltuk</h3>
-              <div className="text-xl sm:text-2xl font-bold text-blue-800">{selectedSeat}</div>
+              <h3 className="text-sm sm:text-base font-semibold text-blue-900 dark:text-blue-100 mb-2">Seçilen Koltuk</h3>
+              <div className="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-200">{selectedSeat}</div>
             </div>
             <div className="flex space-x-1 sm:space-x-2">
                                <button
                   onClick={() => handleSeatSelect('')}
-                  className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs sm:text-sm font-medium"
                 >
                   Değiştir
                 </button>
@@ -228,8 +228,8 @@ export default function SeatAssignmentForm({
                         disabled={isPastDate}
                         className={`text-xs sm:text-sm font-medium ${
                           isPastDate 
-                            ? 'text-gray-400 cursor-not-allowed' 
-                            : 'text-red-600 hover:text-red-800'
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                            : 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
                         }`}
                       >
                         {isPastDate ? 'Geçmiş Tarih' : 'Koltuğu Boşalt'}
@@ -244,7 +244,7 @@ export default function SeatAssignmentForm({
 
       {/* Customer Search */}
       <div className="space-y-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Müşteri Seçimi</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Müşteri Seçimi</h3>
         
         {/* Search Bar */}
         <div className="relative">
@@ -254,7 +254,7 @@ export default function SeatAssignmentForm({
             placeholder="Müşteri ara (isim, telefon, email)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
         </div>
 
@@ -267,29 +267,29 @@ export default function SeatAssignmentForm({
                 onClick={() => handleCustomerSelect(customer)}
                 className={`w-full p-2 sm:p-3 text-left rounded-lg border transition-colors duration-200 ${
                   selectedCustomer?.id === customer.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400'
+                    : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                              >
-                 <div className="font-medium text-gray-900 text-sm sm:text-base">
-                   {customer.title && <span className="text-gray-600 mr-1">{customer.title}</span>}
+                 <div className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">
+                   {customer.title && <span className="text-gray-600 dark:text-gray-400 mr-1">{customer.title}</span>}
                    {customer.name}
                  </div>
                                    {customer.phone && (
-                    <div className="text-xs sm:text-sm text-gray-600 flex items-center space-x-1 sm:space-x-2">
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1 sm:space-x-2">
                       <Phone className="w-3 h-3" />
                       <span>{customer.phone}</span>
                     </div>
                   )}
                                    {customer.email && (
-                    <div className="text-xs sm:text-sm text-gray-600 flex items-center space-x-1 sm:space-x-2">
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1 sm:space-x-2">
                       <Mail className="w-3 h-3" />
                       <span>{customer.email}</span>
                     </div>
                   )}
                   {customer.reference && (
-                    <div className="text-xs sm:text-sm text-gray-600 flex items-center space-x-1 sm:space-x-2">
-                      <span className="text-xs bg-gray-200 px-1 sm:px-2 py-1 rounded">Ref</span>
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1 sm:space-x-2">
+                      <span className="text-xs bg-gray-200 dark:bg-gray-600 px-1 sm:px-2 py-1 rounded">Ref</span>
                       <span>{customer.reference}</span>
                     </div>
                   )}
@@ -300,9 +300,9 @@ export default function SeatAssignmentForm({
 
                  {/* New Customer Form */}
          {showNewCustomerForm && (
-           <form onSubmit={handleNewCustomerSubmit} className="space-y-3 sm:space-y-4 border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-4 bg-gray-50">
+           <form onSubmit={handleNewCustomerSubmit} className="space-y-3 sm:space-y-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3 sm:p-4 bg-gray-50 dark:bg-gray-800">
              <div>
-               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+               <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                  Ünvan
                </label>
                <input
@@ -310,11 +310,11 @@ export default function SeatAssignmentForm({
                  placeholder="Dr., Prof., Av., Doç., Yrd. Doç. vb."
                  value={newCustomer.title}
                  onChange={(e) => setNewCustomer({ ...newCustomer, title: e.target.value })}
-                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                />
              </div>
              <div>
-               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+               <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                  Ad Soyad
                </label>
                <input
@@ -322,33 +322,33 @@ export default function SeatAssignmentForm({
                  required
                  value={newCustomer.name}
                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                />
              </div>
                          <div>
-               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+               <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                  Telefon (Opsiyonel)
                </label>
                <input
                  type="tel"
                  value={newCustomer.phone}
                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                />
              </div>
                          <div>
-               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+               <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                  Email (Opsiyonel)
                </label>
                <input
                  type="email"
                  value={newCustomer.email}
                  onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                />
              </div>
              <div>
-               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+               <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                  Referans (Opsiyonel)
                </label>
                <input
@@ -356,21 +356,21 @@ export default function SeatAssignmentForm({
                  placeholder="Kim tarafından geldiği, özel not vb."
                  value={newCustomer.reference}
                  onChange={(e) => setNewCustomer({ ...newCustomer, reference: e.target.value })}
-                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                />
              </div>
             <div className="flex space-x-2">
                               <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="flex-1 bg-blue-600 dark:bg-blue-500 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   {loading ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
               <button
                 type="button"
                 onClick={() => setShowNewCustomerForm(false)}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300"
               >
                 İptal
               </button>
@@ -382,7 +382,7 @@ export default function SeatAssignmentForm({
         {!showNewCustomerForm && (
           <button
             onClick={() => setShowNewCustomerForm(true)}
-            className="w-full p-2 sm:p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors duration-200"
+            className="w-full p-2 sm:p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-800 dark:hover:text-gray-300 transition-colors duration-200"
           >
             <User className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-2" />
             <div className="font-medium text-sm sm:text-base">Yeni Müşteri Ekle</div>
@@ -392,20 +392,20 @@ export default function SeatAssignmentForm({
 
              {/* Selected Customer */}
        {selectedCustomer && (
-         <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+         <div className="bg-green-50 dark:bg-green-900/20 p-3 sm:p-4 rounded-lg">
            <div className="flex items-center justify-between mb-2">
-             <h3 className="text-sm sm:text-base font-semibold text-green-900">Seçilen Müşteri</h3>
+             <h3 className="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100">Seçilen Müşteri</h3>
              <button
                onClick={() => setSelectedCustomer(null)}
-               className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium flex items-center space-x-1"
+               className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 text-xs sm:text-sm font-medium flex items-center space-x-1"
              >
                <X className="w-4 h-4" />
                <span>Sil</span>
              </button>
            </div>
-           <div className="text-green-800">
+           <div className="text-green-800 dark:text-green-200">
              {selectedCustomer.title && (
-               <div className="text-xs sm:text-sm font-medium text-green-700">{selectedCustomer.title}</div>
+               <div className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-300">{selectedCustomer.title}</div>
              )}
                            <div className="font-medium text-sm sm:text-base">{selectedCustomer.name}</div>
               {selectedCustomer.phone && (
@@ -416,7 +416,7 @@ export default function SeatAssignmentForm({
                )}
                {selectedCustomer.reference && (
                  <div className="text-xs sm:text-sm">
-                   <span className="text-xs bg-green-200 text-green-800 px-1 sm:px-2 py-1 rounded mr-1 sm:mr-2">Ref</span>
+                   <span className="text-xs bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-1 sm:px-2 py-1 rounded mr-1 sm:mr-2">Ref</span>
                    {selectedCustomer.reference}
                  </div>
                )}
@@ -425,10 +425,10 @@ export default function SeatAssignmentForm({
        )}
 
       {/* Action Buttons */}
-      <div className="flex space-x-2 sm:space-x-3 pt-4 border-t border-gray-200">
+      <div className="flex space-x-2 sm:space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={onClose}
-          className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300"
         >
           İptal
         </button>
@@ -446,8 +446,8 @@ export default function SeatAssignmentForm({
                disabled={!selectedCustomer || !selectedSeat || isPastDate}
                className={`flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors duration-200 flex items-center justify-center space-x-1 sm:space-x-2 ${
                  isPastDate 
-                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                   : 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed'
+                   ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+                   : 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed'
                }`}
              >
                <Save className="w-4 h-4" />
