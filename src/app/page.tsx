@@ -27,16 +27,25 @@ export default function Dashboard() {
   // Supabase bağlantı kontrolü
   useEffect(() => {
     const checkConnection = async () => {
+      console.log('🔍 Supabase bağlantısı kontrol ediliyor...');
+      console.log('Environment variables:', {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Tanımlı' : '❌ Eksik',
+        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Tanımlı' : '❌ Eksik'
+      });
+      
       try {
         const { data, error } = await supabase.from('seats').select('count').limit(1);
+        console.log('Supabase response:', { data, error });
+        
         if (error) {
-          console.error('Supabase connection error:', error);
+          console.error('❌ Supabase connection error:', error);
           setConnectionError('Veritabanı bağlantısında sorun var. Lütfen daha sonra tekrar deneyin.');
         } else {
+          console.log('✅ Supabase bağlantısı başarılı');
           setConnectionError(null);
         }
       } catch (error) {
-        console.error('Connection check failed:', error);
+        console.error('❌ Connection check failed:', error);
         setConnectionError('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
       }
     };
@@ -47,25 +56,32 @@ export default function Dashboard() {
   }, [mounted]);
 
   const loadSeatAssignments = useCallback(async () => {
+    console.log('🔄 Koltuk atamaları yükleniyor...', { selectedDate, connectionError });
+    
     if (connectionError) {
-      console.log('Skipping load due to connection error');
+      console.log('⚠️ Skipping load due to connection error');
       return;
     }
 
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      console.log('📅 Tarih:', dateStr);
+      
       const { data, error } = await seatAssignments.getByDate(dateStr);
+      console.log('📊 Seat assignments response:', { data: data?.length, error });
+      
       if (error) {
-        console.error('Error loading seat assignments:', error);
+        console.error('❌ Error loading seat assignments:', error);
         setConnectionError('Veri yüklenirken hata oluştu.');
       } else {
+        console.log('✅ Seat assignments loaded successfully:', data?.length, 'records');
         // Tüm atamaları göster (silinmiş müşteriler dahil)
         setSeatAssignmentsData(data || []);
         setConnectionError(null);
       }
     } catch (error) {
-      console.error('Error loading seat assignments:', error);
+      console.error('❌ Error loading seat assignments:', error);
       setConnectionError('Veri yüklenirken hata oluştu.');
     } finally {
       setLoading(false);

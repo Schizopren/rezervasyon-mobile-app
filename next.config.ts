@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Canlı ortam optimizasyonları
-  output: 'standalone',
+  // Canlı ortam optimizasyonları - standalone'ı kaldırıyoruz
+  // output: 'standalone', // Bu satırı kaldırıyoruz
   experimental: {
     // Turbopack'i dev'de kullan, production'da normal build
     turbo: {
@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   },
   // Compiler optimizasyonları
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: false, // Hataları görmek için console.log'ları kaldırmıyoruz
   },
   // Headers
   async headers() {
