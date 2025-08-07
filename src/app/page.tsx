@@ -22,24 +22,55 @@ export default function Dashboard() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<string | undefined>();
   const [seatAssignmentsData, setSeatAssignmentsData] = useState<any[]>([]);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Supabase bağlantı kontrolü
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('seats').select('count').limit(1);
+        if (error) {
+          console.error('Supabase connection error:', error);
+          setConnectionError('Veritabanı bağlantısında sorun var. Lütfen daha sonra tekrar deneyin.');
+        } else {
+          setConnectionError(null);
+        }
+      } catch (error) {
+        console.error('Connection check failed:', error);
+        setConnectionError('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
+      }
+    };
+
+    if (mounted) {
+      checkConnection();
+    }
+  }, [mounted]);
 
   const loadSeatAssignments = useCallback(async () => {
+    if (connectionError) {
+      console.log('Skipping load due to connection error');
+      return;
+    }
+
     setLoading(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       const { data, error } = await seatAssignments.getByDate(dateStr);
       if (error) {
         console.error('Error loading seat assignments:', error);
+        setConnectionError('Veri yüklenirken hata oluştu.');
       } else {
         // Tüm atamaları göster (silinmiş müşteriler dahil)
         setSeatAssignmentsData(data || []);
+        setConnectionError(null);
       }
     } catch (error) {
       console.error('Error loading seat assignments:', error);
+      setConnectionError('Veri yüklenirken hata oluştu.');
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, connectionError]);
 
   useEffect(() => {
     setMounted(true);
@@ -530,11 +561,43 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Connection Error */}
+        {connectionError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Bağlantı Hatası
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  {connectionError}
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      setConnectionError(null);
+                      loadSeatAssignments();
+                    }}
+                    className="bg-red-100 text-red-800 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-200"
+                  >
+                    Tekrar Dene
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Seat Grid */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold">Koltuk Düzeni</h2>
-            {user && (
+            {user && !connectionError && (
               (() => {
                 // Geçmiş tarihlerde butonu gizle
                 const today = new Date();
@@ -567,6 +630,13 @@ export default function Dashboard() {
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : connectionError ? (
+            <div className="flex justify-center items-center h-64 text-gray-500">
+              <div className="text-center">
+                <div className="text-lg font-medium mb-2">Veri Yüklenemedi</div>
+                <div className="text-sm">Bağlantı sorunu nedeniyle koltuk bilgileri gösterilemiyor.</div>
+              </div>
             </div>
           ) : (
             <div className="space-y-6">

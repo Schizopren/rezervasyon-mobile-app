@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "debug": "next dev --turbopack --port 3001"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
