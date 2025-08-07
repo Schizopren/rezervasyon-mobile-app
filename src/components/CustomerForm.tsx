@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save, User, Phone, Mail } from 'lucide-react';
-import { customers, Customer } from '../lib/supabase';
+import { customers, Customer } from '@/lib/supabase';
 import Drawer from './Drawer';
 
 interface CustomerFormProps {
