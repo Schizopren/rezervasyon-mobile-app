@@ -8,7 +8,7 @@ import Drawer from './Drawer';
 interface CustomerFormProps {
   isOpen: boolean;
   onClose: () => void;
-  customer?: Customer | null; // Düzenleme için mevcut müşteri
+  customer?: Customer | null; // Düzenleme için mevcut Kişi
   onSuccess: () => void;
 }
 
@@ -25,9 +25,9 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
 
   // Form başlığını belirle
   const isEditing = !!customer;
-  const title = isEditing ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle';
+  const title = isEditing ? 'Kişi Düzenle' : 'Yeni Kişi Ekle';
 
-  // Form verilerini sıfırla veya mevcut müşteri verilerini yükle
+  // Form verilerini sıfırla veya mevcut Kişi verilerini yükle
   useEffect(() => {
     if (customer) {
       setFormData({
@@ -62,19 +62,19 @@ export default function CustomerForm({ isOpen, onClose, customer, onSuccess }: C
 
     try {
       if (isEditing && customer) {
-        // Müşteri güncelle
+        // Kişi güncelle
         const { error } = await customers.update(customer.id, formData);
         if (error) {
-          setError('Müşteri güncellenirken hata oluştu');
+          setError('Kişi güncellenirken hata oluştu');
         } else {
           onSuccess();
           onClose();
         }
       } else {
-        // Yeni müşteri ekle
+        // Yeni Kişi ekle
         const { error } = await customers.create(formData);
         if (error) {
-          setError('Müşteri eklenirken hata oluştu');
+          setError('Kişi eklenirken hata oluştu');
         } else {
           onSuccess();
           onClose();

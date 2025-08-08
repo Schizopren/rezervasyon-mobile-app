@@ -1,49 +1,10 @@
-import { createClient, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Supabase client'ı yapılandır
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Auth işlemleri için yardımcı fonksiyonlar
-export const auth = {
-  getCurrentUser: async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    return { user, error };
-  },
-
-  getUserProfile: async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    return { data, error };
-  },
-
-  signIn: async (email: string, password: string) => {
-    return await supabase.auth.signInWithPassword({ email, password });
-  },
-
-  signOut: async () => {
-    return await supabase.auth.signOut();
-  },
-
-  onAuthStateChange: (callback: (event: AuthChangeEvent, session: Session | null) => void) => {
-    return supabase.auth.onAuthStateChange(callback);
-  }
-};
-
-// Database tipleri
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'employee';
-  created_at: string;
-  updated_at: string;
-}
 
 export interface Seat {
   id: string;
@@ -77,11 +38,27 @@ export interface SeatAssignment {
 
 // Müşteri işlemleri
 export const customers = {
+  // Sadece aktif müşterileri getir
   getAll: async () => {
     try {
       const { data, error } = await supabase
         .from('customers')
         .select('*')
+        .is('deleted_at', null) // Sadece silinmemiş olanları getir
+        .order('name');
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  // Tüm müşterileri getir (silinmiş olanlar dahil)
+  getAllWithDeleted: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('deleted_at', { ascending: true, nullsFirst: true })
         .order('name');
       return { data, error };
     } catch (error) {
@@ -108,11 +85,25 @@ export const customers = {
     }
   },
 
+  // Soft delete - Müşteriyi silmek yerine deleted_at alanını güncelle
   delete: async (id: string) => {
     try {
       const { error } = await supabase
         .from('customers')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  },
+
+  // Restore - Silinen müşteriyi geri yükle
+  restore: async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({ deleted_at: null })
         .eq('id', id);
       return { error };
     } catch (error) {

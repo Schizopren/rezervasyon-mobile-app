@@ -5,20 +5,14 @@ import { Plus, Search, Edit, Trash2, Eye, Users } from 'lucide-react';
 import { customers } from '../../lib/supabase';
 import { Customer } from '../../lib/supabase';
 import Header from '../../components/Header';
+import ProtectedAction from '../../components/ProtectedAction';
+import { useAuth } from '../../hooks/useAuth';
 
 import CustomerForm from '../../components/CustomerForm';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function CustomersPage() {
-  // Mock a default user for testing
-  const user = {
-    id: '00000000-0000-0000-0000-000000000000', // Geçerli bir UUID formatı
-    name: 'Test User',
-    email: 'test@example.com',
-    role: 'admin' as const,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  const { isAuthenticated } = useAuth();
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,11 +36,11 @@ export default function CustomersPage() {
     };
   }, []);
 
-  // Müşterileri yükle
+  // Kişileri yükle (silinenler dahil)
   const loadCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await customers.getAll();
+      const { data, error } = await customers.getAllWithDeleted();
       if (error) {
         console.error('Error loading customers:', error);
       } else {
@@ -87,17 +81,9 @@ export default function CustomersPage() {
     }
   };
 
-  const handleLogout = async () => {};
-
   const handleSearchSubmit = (query: string) => {
     handleSearch(query);
   };
-
-  const handleUserProfile = () => {
-    console.log('User profile clicked');
-  };
-
-  const handleLogin = async () => true;
 
   const handleNavigate = (path: string) => {
     if (path === '/') {
@@ -121,7 +107,7 @@ export default function CustomersPage() {
   };
 
   const handleCustomerFormSuccess = () => {
-    loadCustomers(); // Müşteri listesini yenile
+    loadCustomers(); // Kişi listesini yenile
   };
 
   const handleDeleteCustomer = (customer: Customer) => {
@@ -136,13 +122,13 @@ export default function CustomersPage() {
       const { error } = await customers.delete(customerToDelete.id);
       if (error) {
         console.error('Error deleting customer:', error);
-        alert('Müşteri silinirken hata oluştu!');
+        alert('Kişi silinirken hata oluştu!');
       } else {
-        loadCustomers(); // Müşteri listesini yenile
+        loadCustomers(); // Kişi listesini yenile
       }
     } catch (error) {
       console.error('Error deleting customer:', error);
-      alert('Müşteri silinirken hata oluştu!');
+      alert('Kişi silinirken hata oluştu!');
     }
   };
 
@@ -161,22 +147,31 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <Header 
-        onLogout={handleLogout}
-        onSearch={handleSearchSubmit}
-        onUserProfile={handleUserProfile}
-        onLogin={handleLogin}
-        currentUser={user}
-        searchResults={searchResults}
-        isSearching={isSearching}
-        onNavigate={handleNavigate}
-        currentPath="/customers"
-      />
+    <ProtectedAction
+      permission="edit_customers"
+      fallback={
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Erişim Kısıtlı</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Kişiler sayfasına erişmek için giriş yapmanız gerekiyor.
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        {/* Header */}
+        <Header 
+          onSearch={handleSearchSubmit}
+          searchResults={searchResults}
+          isSearching={isSearching}
+          onNavigate={handleNavigate}
+          currentPath="/customers"
+        />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}
         {(
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
@@ -276,44 +271,88 @@ export default function CustomersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {customersList.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{customer.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-300">{customer.title || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-300">{customer.phone || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-300">{customer.email || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-gray-300">{customer.reference || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                                                     <button 
-                             onClick={() => handleEditCustomer(customer)}
-                             className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 p-1"
-                           >
-                             <Edit className="w-4 h-4" />
-                           </button>
-                                                     <button 
-                             onClick={() => handleDeleteCustomer(customer)}
-                             className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1"
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {customersList.map((customer) => {
+                    const isDeleted = customer.deleted_at !== null;
+                    return (
+                      <tr key={customer.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        isDeleted ? 'bg-gray-50 dark:bg-gray-800' : ''
+                      }`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm font-medium ${
+                            isDeleted 
+                              ? 'text-gray-400 dark:text-gray-500 line-through' 
+                              : 'text-gray-900 dark:text-white'
+                          }`}>
+                            {customer.name}
+                            {isDeleted && (
+                              <span className="ml-2 text-xs text-red-500 dark:text-red-400">
+                                (Silindi)
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm ${
+                            isDeleted 
+                              ? 'text-gray-400 dark:text-gray-500' 
+                              : 'text-gray-900 dark:text-gray-300'
+                          }`}>
+                            {customer.title || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm ${
+                            isDeleted 
+                              ? 'text-gray-400 dark:text-gray-500' 
+                              : 'text-gray-900 dark:text-gray-300'
+                          }`}>
+                            {customer.phone || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm ${
+                            isDeleted 
+                              ? 'text-gray-400 dark:text-gray-500' 
+                              : 'text-gray-900 dark:text-gray-300'
+                          }`}>
+                            {customer.email || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className={`text-sm ${
+                            isDeleted 
+                              ? 'text-gray-400 dark:text-gray-500' 
+                              : 'text-gray-900 dark:text-gray-300'
+                          }`}>
+                            {customer.reference || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {!isDeleted && (
+                              <>
+                                <button 
+                                  onClick={() => handleEditCustomer(customer)}
+                                  className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 p-1"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteCustomer(customer)}
+                                  className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -334,12 +373,13 @@ export default function CustomersPage() {
           isOpen={isDeleteDialogOpen}
           onClose={handleDeleteDialogClose}
           onConfirm={handleConfirmDelete}
-          title="Müşteri Sil"
-          message={`"${customerToDelete?.name}" adlı müşteriyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
+          title="Kişi Sil"
+          message={`"${customerToDelete?.name}" adlı Kişiyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`}
           confirmText="Sil"
           cancelText="İptal"
           type="danger"
         />
       </div>
-    );
-  } 
+    </ProtectedAction>
+  );
+} 

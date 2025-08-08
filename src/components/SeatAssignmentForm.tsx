@@ -52,7 +52,7 @@ export default function SeatAssignmentForm({
     setSelectedCustomer(existingCustomer || null);
   }, [existingCustomer]);
 
-  // Müşterileri yükle
+  // Kişileri yükle
   useEffect(() => {
     const loadCustomers = async () => {
       setLoading(true);
@@ -76,7 +76,8 @@ export default function SeatAssignmentForm({
   const filteredCustomers = allCustomers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone?.includes(searchTerm) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -89,7 +90,7 @@ export default function SeatAssignmentForm({
     setLoading(true);
     
     try {
-      // Yeni müşteri için geçici ID oluştur
+      // Yeni Kişi için geçici ID oluştur
       const tempCustomer = {
         id: `temp_${Date.now()}`,
         name: newCustomer.name,
@@ -105,7 +106,7 @@ export default function SeatAssignmentForm({
       
     } catch (error) {
       console.error('Error creating customer:', error);
-      alert('Müşteri eklenirken hata oluştu!');
+      alert('Kişi eklenirken hata oluştu!');
     } finally {
       setLoading(false);
     }
@@ -244,14 +245,14 @@ export default function SeatAssignmentForm({
 
       {/* Customer Search */}
       <div className="space-y-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Müşteri Seçimi</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Kişi Seçimi</h3>
         
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Müşteri ara (isim, telefon, email)"
+            placeholder="Kişi ara (ünvan, isim, telefon, email)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -385,7 +386,7 @@ export default function SeatAssignmentForm({
             className="w-full p-2 sm:p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-800 dark:hover:text-gray-300 transition-colors duration-200"
           >
             <User className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-2" />
-            <div className="font-medium text-sm sm:text-base">Yeni Müşteri Ekle</div>
+            <div className="font-medium text-sm sm:text-base">Yeni Kişi Ekle</div>
           </button>
         )}
       </div>
@@ -394,7 +395,7 @@ export default function SeatAssignmentForm({
        {selectedCustomer && (
          <div className="bg-green-50 dark:bg-green-900/20 p-3 sm:p-4 rounded-lg">
            <div className="flex items-center justify-between mb-2">
-             <h3 className="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100">Seçilen Müşteri</h3>
+             <h3 className="text-sm sm:text-base font-semibold text-green-900 dark:text-green-100">Seçilen Kişi</h3>
              <button
                onClick={() => setSelectedCustomer(null)}
                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 text-xs sm:text-sm font-medium flex items-center space-x-1"

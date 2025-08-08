@@ -8,6 +8,8 @@ import Header from '../components/Header';
 import DatePicker from '../components/DatePicker';
 import Drawer from '../components/Drawer';
 import SeatAssignmentForm from '../components/SeatAssignmentForm';
+import ProtectedAction from '../components/ProtectedAction';
+import { useAuth } from '../hooks/useAuth';
 
 import { seatAssignments, customers, supabase } from '../lib/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
@@ -16,15 +18,7 @@ import { PostgrestError } from '@supabase/supabase-js';
 const customerData: Record<string, { id: string; name: string; title: string }> = {};
 
 export default function Dashboard() {
-  // Mock a default user for testing
-  const user = {
-    id: '00000000-0000-0000-0000-000000000000', // Geçerli bir UUID formatı
-    name: 'Test User',
-    email: 'test@example.com',
-    role: 'admin' as const,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  const { isAuthenticated, checkPermission } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -40,7 +34,7 @@ export default function Dashboard() {
       if (error) {
         console.error('Error loading seat assignments:', error);
       } else {
-        // Tüm atamaları göster (silinmiş müşteriler dahil)
+        // Tüm atamaları göster (silinmiş Kişiler dahil)
         setSeatAssignmentsData(data || []);
       }
     } catch (error) {
@@ -69,8 +63,7 @@ export default function Dashboard() {
     }
   }, [selectedDate, mounted, loadSeatAssignments]);
 
-  const handleLogin = async () => true;
-  const handleLogout = async () => {};
+
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -95,7 +88,7 @@ export default function Dashboard() {
         return;
       }
 
-      // Müşteri adına göre filtrele (silinmiş müşteriler dahil)
+      // Kişi adına göre filtrele (silinmiş Kişiler dahil)
       const matchingAssignments = assignments?.filter((assignment: any) => 
         assignment.customer?.name?.toLowerCase().includes(query.toLowerCase()) ||
         assignment.customer?.title?.toLowerCase().includes(query.toLowerCase())
@@ -117,11 +110,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleUserProfile = () => {
-    console.log('User profile clicked');
-    // Implement user profile functionality
-    alert('Profil sayfası açılacak');
-  };
+
 
   const formatDate = (date: Date) => {
     return format(date, 'EEEE, d MMMM yyyy', { locale: tr });
@@ -130,7 +119,11 @@ export default function Dashboard() {
   const handleSeatClick = (seatId: string) => {
     console.log('Seat clicked:', seatId);
     
-
+    // Giriş yapmamış kullanıcılar için kontrol
+    if (!isAuthenticated) {
+      alert('Koltuk işlemleri için giriş yapmanız gerekiyor!');
+      return;
+    }
     
     // Geçmiş tarihlerde koltuk işlemlerini engelle
     const today = new Date();
@@ -147,7 +140,7 @@ export default function Dashboard() {
     setIsDrawerOpen(true);
   };
 
-  // Dolu koltuğun müşteri bilgisini al
+  // Dolu koltuğun Kişi bilgisini al
   const getCustomerForSeat = (seatId: string) => {
     const row = seatId.charAt(0);
     const number = parseInt(seatId.slice(1));
@@ -162,6 +155,12 @@ export default function Dashboard() {
   };
 
   const handleKoltukAtaClick = () => {
+    // Giriş yapmamış kullanıcılar için kontrol
+    if (!isAuthenticated) {
+      alert('Koltuk işlemleri için giriş yapmanız gerekiyor!');
+      return;
+    }
+    
     // Geçmiş tarihlerde koltuk işlemlerini engelle
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -206,10 +205,10 @@ export default function Dashboard() {
         return;
       }
 
-      // Müşteriyi ekleyelim (eğer yeni ise)
+      // Kişiyi ekleyelim (eğer yeni ise)
       let customerId = data.customer.id;
       
-      // Eğer müşteri yeni ise (geçici ID ile işaretlenmiş)
+      // Eğer Kişi yeni ise (geçici ID ile işaretlenmiş)
       if (data.customer.id && data.customer.id.startsWith('temp_')) {
         const { data: newCustomer, error: customerError } = await customers.create({
           name: data.customer.name,
@@ -221,7 +220,7 @@ export default function Dashboard() {
 
         if (customerError) {
           console.error('Customer creation error:', customerError);
-          alert('Müşteri eklenirken hata oluştu!');
+          alert('Kişi eklenirken hata oluştu!');
           return;
         }
 
@@ -390,18 +389,18 @@ export default function Dashboard() {
           >
             <span className="font-bold">{seatId}</span>
             
-            {/* Müşteri bilgileri - sadece dolu koltuklarda, direkt görünür */}
+            {/* Kişi bilgileri - sadece dolu koltuklarda, direkt görünür */}
             {isAssigned && customer && (
               <div className={`absolute inset-0 text-white rounded-lg 
                             flex flex-col items-center justify-center text-xs md:text-sm
-                            ${customer.is_deleted 
+                            ${customer.deleted_at 
                               ? 'bg-gray-600 bg-opacity-75' 
                               : 'bg-black bg-opacity-75'
                             }`}>
                 <div className="font-semibold">{customer.title}</div>
                 <div className="text-center leading-tight">{customer.name}</div>
-                {customer.is_deleted && (
-                  <div className="text-xs text-gray-300 mt-1">(Silinmiş)</div>
+                {customer.deleted_at && (
+                  <div className="text-xs text-gray-300 mt-1">(Kullanıcı silindi)</div>
                 )}
               </div>
             )}
@@ -437,11 +436,7 @@ export default function Dashboard() {
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <Header 
-        onLogout={handleLogout}
         onSearch={handleSearch}
-        onUserProfile={handleUserProfile}
-        onLogin={handleLogin}
-        currentUser={user}
         searchResults={searchResults}
         isSearching={isSearching}
         onNavigate={(path) => {
@@ -489,16 +484,24 @@ export default function Dashboard() {
           
           {/* DatePicker */}
           <div className="mb-4">
-            <DatePicker 
-              selectedDate={selectedDate}
-              onDateSelect={(date) => {
-                // Geçersiz tarih kontrolü
-                if (date && !isNaN(date.getTime())) {
-                  setSelectedDate(date);
-                }
-              }}
-              isReadOnly={false}
-            />
+            {isAuthenticated ? (
+              <DatePicker 
+                selectedDate={selectedDate}
+                onDateSelect={(date) => {
+                  // Geçersiz tarih kontrolü
+                  if (date && !isNaN(date.getTime())) {
+                    setSelectedDate(date);
+                  }
+                }}
+                isReadOnly={false}
+              />
+            ) : (
+              <DatePicker 
+                selectedDate={new Date()}
+                onDateSelect={() => {}} // Boş fonksiyon
+                isReadOnly={true}
+              />
+            )}
           </div>
         </div>
 
@@ -524,13 +527,22 @@ export default function Dashboard() {
                 }
                 
                 return (
-                  <button 
-                    onClick={handleKoltukAtaClick}
-                    className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center space-x-2"
+                  <ProtectedAction
+                    permission="edit_seats"
+                    fallback={
+                      <div className="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
+                        Koltuk işlemleri için giriş yapın
+                      </div>
+                    }
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>Koltuk Ata</span>
-                  </button>
+                    <button 
+                      onClick={handleKoltukAtaClick}
+                      className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center space-x-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Koltuk Ata</span>
+                    </button>
+                  </ProtectedAction>
                 );
               })()
             )}
