@@ -108,7 +108,9 @@ export const useAuth = () => {
         let permissions: string[] = [];
         
         if (profile?.role === 'admin') {
-          permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers'];
+          permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers', 'view_reports'];
+        } else if (profile?.role === 'manager') {
+          permissions = ['view_seats', 'edit_seats', 'change_date'];
         } else if (profile?.role === 'employee') {
           permissions = ['view_seats', 'edit_seats', 'change_date'];
         } else {

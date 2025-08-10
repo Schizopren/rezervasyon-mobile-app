@@ -112,14 +112,16 @@ export const useAuthStore = create<AuthState>()(
           // Role'e göre permissions belirle
           let permissions: string[] = [];
           
-          if (profile?.role === 'admin') {
-            permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers'];
-          } else if (profile?.role === 'employee') {
-            permissions = ['view_seats', 'edit_seats', 'change_date'];
-          } else {
-            // Varsayılan permissions (role yoksa)
-            permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers'];
-          }
+                  if (profile?.role === 'admin') {
+          permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers', 'view_reports'];
+        } else if (profile?.role === 'manager') {
+          permissions = ['view_seats', 'edit_seats', 'change_date'];
+        } else if (profile?.role === 'employee') {
+          permissions = ['view_seats', 'edit_seats', 'change_date'];
+        } else {
+          // Varsayılan permissions (role yoksa)
+          permissions = ['view_seats', 'edit_seats', 'change_date', 'edit_customers'];
+        }
           
           console.log('Permissions set for role:', profile?.role, permissions);
           set({ permissions });

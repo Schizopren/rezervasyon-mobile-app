@@ -225,3 +225,136 @@ export const seatAssignments = {
     }
   }
 };
+
+// Müşteri raporları için yeni API
+export const customerReports = {
+  // En sık gelen müşterileri getir (ziyaret sayısına göre sıralı)
+  getTopCustomers: async (limit: number = 10) => {
+    try {
+      const { data, error } = await supabase
+        .from('seat_assignments')
+        .select(`
+          customer_id,
+          customer:customers(id, name, title, phone, email, created_at, deleted_at),
+          date,
+          created_at
+        `)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      // Müşteri bazında grupla ve ziyaret sayısını hesapla
+      const customerStats = new Map();
+      
+      data?.forEach((assignment) => {
+        const customerId = assignment.customer_id;
+        const customer = assignment.customer;
+        
+        if (!customerStats.has(customerId)) {
+          customerStats.set(customerId, {
+            customer: customer,
+            visitCount: 0,
+            lastVisit: null,
+            firstVisit: null,
+            visits: []
+          });
+        }
+        
+        const stats = customerStats.get(customerId);
+        stats.visitCount += 1;
+        stats.visits.push({
+          date: assignment.date,
+          created_at: assignment.created_at
+        });
+        
+        // İlk ve son ziyaret tarihlerini güncelle
+        const visitDate = new Date(assignment.date);
+        if (!stats.firstVisit || visitDate < new Date(stats.firstVisit)) {
+          stats.firstVisit = assignment.date;
+        }
+        if (!stats.lastVisit || visitDate > new Date(stats.lastVisit)) {
+          stats.lastVisit = assignment.date;
+        }
+      });
+
+      // Ziyaret sayısına göre sırala ve limit uygula
+      const sortedCustomers = Array.from(customerStats.values())
+        .sort((a, b) => b.visitCount - a.visitCount)
+        .slice(0, limit);
+
+      return { data: sortedCustomers, error: null };
+    } catch (error) {
+      console.error('❌ Customer reports error:', error);
+      return { data: [], error };
+    }
+  },
+
+  // Belirli müşterinin ziyaret geçmişini getir
+  getCustomerVisitHistory: async (customerId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('seat_assignments')
+        .select(`
+          *,
+          seat:seats(row, number),
+          customer:customers(*)
+        `)
+        .eq('customer_id', customerId)
+        .order('date', { ascending: false });
+
+      return { data: data || [], error };
+    } catch (error) {
+      console.error('❌ Customer visit history error:', error);
+      return { data: [], error };
+    }
+  },
+
+  // Genel müşteri istatistikleri
+  getCustomerStats: async () => {
+    try {
+      // Toplam müşteri sayısı
+      const { data: totalCustomers, error: totalError } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact' });
+
+      // Aktif müşteri sayısı (silinmemiş)
+      const { data: activeCustomers, error: activeError } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact' })
+        .is('deleted_at', null);
+
+      // Silinmiş müşteri sayısı
+      const { data: deletedCustomers, error: deletedError } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact' })
+        .not('deleted_at', 'is', null);
+
+      // Bu ay yeni eklenen müşteri sayısı
+      const firstDayOfMonth = new Date();
+      firstDayOfMonth.setDate(1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+      
+      const { data: newCustomers, error: newError } = await supabase
+        .from('customers')
+        .select('id', { count: 'exact' })
+        .gte('created_at', firstDayOfMonth.toISOString());
+
+      if (totalError || activeError || deletedError || newError) {
+        throw new Error('Error fetching customer stats');
+      }
+
+      return {
+        data: {
+          total: totalCustomers?.length || 0,
+          active: activeCustomers?.length || 0,
+          deleted: deletedCustomers?.length || 0,
+          newThisMonth: newCustomers?.length || 0
+        },
+        error: null
+      };
+    } catch (error) {
+      console.error('❌ Customer stats error:', error);
+      return { data: null, error };
+    }
+  }
+};
